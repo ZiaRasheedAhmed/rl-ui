@@ -5,6 +5,10 @@ import { Button } from "@mui/material";
 import { useState, useCallback } from "react";
 import InputField from "../profile/InputField/InputField";
 import '../../../index.css';
+import { AlertMessage } from "../profile/AlertMessage/AlertMessage.js";
+import swal from 'sweetalert';
+
+
 
 const ScheduleInterview = () => {
   const [candidateName, setCandidateName] = useState("");
@@ -12,6 +16,10 @@ const ScheduleInterview = () => {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00");
   const [errors, setErrors] = useState({});
+
+  const [showAlert, setShowAlert] = useState(false)
+  const [alertType, setalertType] = useState('alert');
+  const [message, setMessage] = useState('')
 
   const validate = (values) => {
     let errors = {};
@@ -48,18 +56,42 @@ const ScheduleInterview = () => {
     setDate(val);
   }, []);
 
-  async function onSubmit(event) {
-    event.preventDefault();
 
-    const errors = validate({ candidateName, interviewer, date, time });
+  const onSubmit = (event) => {
+    event.preventDefault();
+    // const errors = validate({ job_id, interview_id, candidate_id, interview_date, interview_time });
     setErrors(errors);
     if (Object.keys(errors).length === 0) {
       const data = {
-        candidateName: candidateName,
-        interviewer: interviewer,
-        date: date,
-        time: time,
-      };
+        job_id: 1,
+        interview_id:2,
+        candidate_id:3,
+        interview_date: date,
+        interview_time: time
+      }
+      fetch("http://localhost:8080/interview", {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        },
+      }).then((response) => {
+        if (response.status === 200) {
+          swal(
+            {
+              title: "Saved Successfully!",
+              icon: "success",
+            });
+        }
+        else if (response.status === 404) {
+          swal({
+            title: "Server Not Responding!",
+            icon: "error",
+          }
+          );
+        }
+      }
+      );
     }
   }
 
@@ -88,13 +120,13 @@ const ScheduleInterview = () => {
           <h1 className={styles.scheduleInterview}>Schedule Interview</h1>
         </div>
         <form className={styles.formInterview} onSubmit={onSubmit}>
+        {showAlert ? <AlertMessage showAlert={showAlert} setAlert={setShowAlert} alertType={alertType} message={message} /> : ''}
           <div className={styles.form_row}>
             <div className={styles.form_column}>
               <div className={styles.row}>
                 <div className={styles.column}>
                   <label>Candidate Name:</label>
                   <InputField
-                    readonly
                     value={candidateName}
                     handler={handleCandidatename}
                     type="text"
